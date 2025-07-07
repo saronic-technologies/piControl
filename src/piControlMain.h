@@ -8,6 +8,7 @@
 /********************************  Includes  **********************************/
 /******************************************************************************/
 #include <linux/cdev.h>
+#include <linux/rtmutex.h>
 #include <linux/leds.h>
 
 #include "common_define.h"

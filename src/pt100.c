@@ -5,6 +5,7 @@
 
 #include "pt100.h"
 #include <linux/kernel.h>
+#include <linux/pibridge_comm.h>
 
 static const u16 ai16uPtTable_l[] =
     {

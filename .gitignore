@@ -8,4 +8,9 @@ Module.symvers
 compiletime.h
 modules.order
 piControl.ko
+piControl.mod
 piControl.mod.c
+compile_commands.json
+.cache/
+result
+result/
