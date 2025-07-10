@@ -17,6 +17,7 @@
 
 #include "IoProtocol.h"
 #include "ModGateRS485.h"
+#include "linux/printk.h"
 #include "piConfig.h"
 #include "piControlMain.h"
 #include "piFirmwareUpdate.h"
@@ -133,6 +134,7 @@ static int __init piControlInit(void)
 
 	wait_for_device_probe();
 
+  pr_info("Saronic RevPi Control driver active\n");
 	if (of_machine_is_compatible("kunbus,revpi-compact")) {
 		piDev_g.machine_type = REVPI_COMPACT;
 		pr_info("RevPi Compact\n");
