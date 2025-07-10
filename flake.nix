@@ -59,17 +59,20 @@
         
         nativeBuildInputs = [
           build-module
+          pkgs.xz
         ];
         
         # !!! I have no idea why I can't just build this using exactly what build-module
         # !!! does!  This is working for now, so I'm going to leave it as-is
         buildPhase = ''
           build-module
+          # The default RevPi image has the module compressed, so we want to do the same
+          xz piControl.ko
         '';
 
         installPhase = ''
           mkdir -p $out
-          cp piControl.ko $out/
+          cp piControl.ko.xz $out/
         '';
         
         meta = with pkgs.lib; {
