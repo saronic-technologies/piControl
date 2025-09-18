@@ -17,7 +17,7 @@
           owner = "RevolutionPi";
           repo = "linux";
           rev = "revpi-6.6";
-          hash = "sha256-dj2OKvAX5HK4q1VL38gz0tmKGR5h8kmIMECDsOPz0Mo=";
+          hash = "sha256-eJpPIic0Y933DkieBgMd6aGABnBvK8FXrO389Iop8Hw=";
         };
 
         nativeBuildInputs = with pkgs; [
@@ -57,6 +57,10 @@
           hash = "sha256-G2QhZGtUaXbPS+Anex0Hv9Ogbx7kExXqYeFsDXBWbmU=";
         };
 
+        nativeBuildInputs = with pkgs; [
+          patchelf
+        ];
+
         # We need this for some reason, as Nix tries to build the headers otherwise
         buildPhase = ''
           echo "Dummy"
@@ -65,14 +69,13 @@
         installPhase = ''
           mkdir -p $out
           cp -R . $out
+          NIX_DYNAMIC_LINKER=$(cat $NIX_CC/nix-support/dynamic-linker)
+          # Patch our fixdep interpreter to use our dynamic linker instead of the one it was compiled for
+          patchelf --set-interpreter "$NIX_DYNAMIC_LINKER" $out/scripts/basic/fixdep
+          # Patch our modpost interpreter to use our dynamic linker instead of the one it was compiled for
+          patchelf --set-interpreter "$NIX_DYNAMIC_LINKER" $out/scripts/mod/modpost
         '';
       };
-
-      # Build script for kernel module
-      build-module = pkgs.writeShellScriptBin "build-module" ''
-        make KDIR=${revpi-kernel-prepared} clean
-        make KDIR=${revpi-kernel-prepared} "$@"
-      '';
 
       # Package for the kernel module
       piControl = pkgs.stdenv.mkDerivation {
@@ -85,11 +88,8 @@
           pkgs.xz
         ];
         
-        # !!! I have no idea why I can't just build this using exactly what build-module
-        # !!! does!  This is working for now, so I'm going to leave it as-is
         buildPhase = ''
-          # make KDIR=${revpi-kernel-prepared} clean
-          make KDIR=${revpi-kernel-prepared}
+          make KDIR=${revpi-kernel-headers}
           # The default RevPi image has the module compressed, so we want to do the same
           xz piControl.ko
         '';
@@ -133,8 +133,6 @@
           
           # Remove problematic -mabi=lp64 flag
           sed -i 's/"-mabi=lp64",//g' compile_commands.json
-
-          echo "RevolutionPi kernel source symlinked to: $KERNEL_SRC"
         '';
       };
     };
