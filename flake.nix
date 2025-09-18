@@ -17,7 +17,7 @@
           owner = "RevolutionPi";
           repo = "linux";
           rev = "revpi-6.6";
-          hash = "sha256-eJpPIic0Y933DkieBgMd6aGABnBvK8FXrO389Iop8Hw=";
+          hash = "sha256-nubcbFtByYeT7Qcozi8tgIMyPwkZAF7SHq/QeT03GrI=";
         };
 
         nativeBuildInputs = with pkgs; [
