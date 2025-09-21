@@ -9,41 +9,69 @@
     let
       system = "aarch64-linux";
       pkgs = import nixpkgs { inherit system; };
-      
-      revpi-kernel-prepared = pkgs.stdenv.mkDerivation {
-        name = "revpi-kernel-prepared";
 
+      inherit (nixpkgs) lib;
+      
+      sample_kernel = pkgs.buildLinux {
+        version = "6.6.84-rt52-v8";
+        # extraMeta.branch = "6.6";
+      
         src = pkgs.fetchFromGitHub {
           owner = "RevolutionPi";
           repo = "linux";
-          rev = "revpi-6.6";
-          hash = "sha256-nubcbFtByYeT7Qcozi8tgIMyPwkZAF7SHq/QeT03GrI=";
+          rev = "fe0aa6034a477f1ee3c68843beebbf31b4c0c8cb";
+          hash = "sha256-K0UiPuOs7OOmzLVoNm31sMgTS9ImVhV5R98jSMa41qc=";
         };
-
-        nativeBuildInputs = with pkgs; [
-          gcc12
-          bc
-          flex
-          bison
-          elfutils
-          openssl
-          pkg-config
-          ncurses
-          perl
-        ];
-
-        buildPhase = ''
-          # Prepare the kernel for module building
-          make mrproper
-          cp ${revpi-kernel-headers}/.config .
-          make modules_prepare
-          cp ${revpi-kernel-headers}/Module.symvers .
-        '';
-        installPhase = ''
-          mkdir -p $out
-          cp -R . $out
-        '';
+      
+        autoModules = false;
+      
+        enableCommonConfig = false;
+        # ignoreConfigErrors = true;
+      
+        # features = { };
+      
+        # kernelPatches = [ ] ++ kernelPatches;
+      
+        defconfig = "revpi-v8_defconfig";
+      
+        # We will disable pieces of the kernel here for "release" builds
+        structuredExtraConfig = {
+        };
       };
+      # revpi-kernel-prepared = pkgs.stdenv.mkDerivation {
+      #   name = "revpi-kernel-prepared";
+
+      #   src = pkgs.fetchFromGitHub {
+      #     owner = "RevolutionPi";
+      #     repo = "linux";
+      #     rev = "revpi-6.6";
+      #     hash = "sha256-nubcbFtByYeT7Qcozi8tgIMyPwkZAF7SHq/QeT03GrI=";
+      #   };
+
+      #   nativeBuildInputs = with pkgs; [
+      #     gcc12
+      #     bc
+      #     flex
+      #     bison
+      #     elfutils
+      #     openssl
+      #     pkg-config
+      #     ncurses
+      #     perl
+      #   ];
+
+      #   buildPhase = ''
+      #     # Prepare the kernel for module building
+      #     make mrproper
+      #     cp ${revpi-kernel-headers}/.config .
+      #     make modules_prepare
+      #     cp ${revpi-kernel-headers}/Module.symvers .
+      #   '';
+      #   installPhase = ''
+      #     mkdir -p $out
+      #     cp -R . $out
+      #   '';
+      # };
 
       # Derivation to get Modules.symvers and .config for the RevPi that we are
       # using.  It's RevPi Linux dependent; we are using 6.6 right now
@@ -78,41 +106,81 @@
       };
 
       # Package for the kernel module
-      piControl = pkgs.stdenv.mkDerivation {
-        name = "piControl";
-        version = "2.3.7";
-        
-        src = ./.;
-        
-        nativeBuildInputs = [
-          pkgs.xz
-        ];
-        
-        buildPhase = ''
-          make KDIR=${revpi-kernel-headers}
-          # The default RevPi image has the module compressed, so we want to do the same
-          xz piControl.ko
-        '';
+      # piControl = pkgs.stdenv.mkDerivation {
+      #   name = "piControl";
+      #   version = "2.3.7";
+      #   
+      #   src = ./.;
+      #   
+      #   nativeBuildInputs = [
+      #     pkgs.xz
+      #   ];
+      #   
+      #   buildPhase = ''
+      #     make KDIR=${revpi-kernel-headers}
+      #     # The default RevPi image has the module compressed, so we want to do the same
+      #     xz piControl.ko
+      #   '';
 
-        installPhase = ''
-          mkdir -p $out
-          cp piControl.ko.xz $out/
-        '';
-        
-        meta = with pkgs.lib; {
-          description = "RevolutionPi kernel module for process image control";
-          license = licenses.gpl2Only;
-          platforms = [ "aarch64-linux" ];
-        };
-      };
+      #   installPhase = ''
+      #     mkdir -p $out
+      #     cp piControl.ko.xz $out/
+      #   '';
+      #   
+      #   meta = with pkgs.lib; {
+      #     description = "RevolutionPi kernel module for process image control";
+      #     license = licenses.gpl2Only;
+      #     platforms = [ "aarch64-linux" ];
+      #   };
+      # };
     in
     {
-      packages.${system}.default = piControl;
+      buildWithKernel = kernel: (
+        # We need to prepare a derivation that has Module.symvers, .config,
+        # and the kernel source in one directory, then simply point our build
+        # to that directory.
+        let
+          # Our kernel derivation has a "dev" attribute that points to the kernel headers,
+          # Module.symvers, and .config files that we need
+          KDIR = "${kernel.dev}/lib/modules/${kernel.modDirVersion}/build";
+        in 
+          pkgs.stdenv.mkDerivation {
+            name = "piControl";
+            version = "2.3.7";
+            
+            src = ./.;
+            
+            nativeBuildInputs = [
+              pkgs.xz
+            ];
+            
+            buildPhase = ''
+              make KDIR=${KDIR}
+              # The default RevPi image has the module compressed, so we want to do the same
+              xz piControl.ko
+            '';
+          
+            installPhase = ''
+              mkdir -p $out
+              cp piControl.ko.xz $out/
+            '';
+            
+            meta = with pkgs.lib; {
+              description = "RevolutionPi kernel module for process image control";
+              license = licenses.gpl2Only;
+              platforms = [ "aarch64-linux" ];
+            };
+          }
+      );
+      packages.${system} = {
+        default = (self.buildWithKernel sample_kernel);
+        sample_kernel = sample_kernel;
+      };
       
       devShells.${system}.default = pkgs.mkShell {
         packages = with pkgs; [
           gnumake
-          gcc12
+          gcc
           bc
           flex
           bison
@@ -128,8 +196,8 @@
           # Create kernel source symlink in a known location
           
           # compile_commands.json only works when made in this directory for some reason, which sucks
-          make KDIR=${revpi-kernel-prepared} clean
-          bear -- make KDIR=${revpi-kernel-prepared} V=1
+          make KDIR=${revpi-kernel-headers} clean
+          bear -- make KDIR=${revpi-kernel-headers} V=1
           
           # Remove problematic -mabi=lp64 flag
           sed -i 's/"-mabi=lp64",//g' compile_commands.json
