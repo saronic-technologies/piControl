@@ -8,6 +8,7 @@
 #include <linux/pinctrl/pinconf-generic.h>
 #include <linux/platform_device.h>
 
+#include "PiBridgeMaster.h"
 #include "revpi_common.h"
 #include "revpi_core.h"
 
