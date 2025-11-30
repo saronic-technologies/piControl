@@ -189,7 +189,6 @@ INT32S piIoComm_sendRS485Tel(INT16U i16uCmd_p, INT8U i8uAddress_p,
 	// -> increase the timeout value to 1s
 	if (i8uSendDataLen_p > 0 && pi8uSendData_p[0] == 'F')
 		timeout = 1000; // ms
-
 	ret = pibridge_req_gate_tmt(i8uAddress_p, i16uCmd_p, pi8uSendData_p,
 				    i8uSendDataLen_p, pi8uRecvData_p,
 				    rcvlen, timeout);
