@@ -5,8 +5,8 @@
   # and the kernel source in one directory, then simply point our build
   # to that directory.
   let
-    # Our kernel derivation has a "dev" attribute that points to the kernel headers,
-    # Module.symvers, and .config files that we need
+    # A passed-in kernel has a "dev" derivation that points to the symvers, config, 
+    # and headers that we need to build our module
     KDIR = "${kernel.dev}/lib/modules/${kernel.modDirVersion}/build";
   in 
     pkgs.stdenv.mkDerivation {
