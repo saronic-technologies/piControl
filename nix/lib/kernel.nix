@@ -10,17 +10,24 @@ in
     version = "6.6.84-rt52-v8";
     # modDirVersion = "6.6.84-rt52-v8";
   
-    src = pkgs.fetchFromGitHub {
-      owner = "RevolutionPi";
+    src = pkgs.fetchFromGitLab {
+      owner = "revolutionpi";
       repo = "linux";
-      rev = "26e35e95be0aa35823039d049034daaf3fdc4287";
-      hash = "sha256-K5uVos2FpDpagbY8n7gaMsJWuyBHwjottOX5AHVgCmI=";
-      # rev = "fe0aa6034a477f1ee3c68843beebbf31b4c0c8cb";
-      # hash = "sha256-K0UiPuOs7OOmzLVoNm31sMgTS9ImVhV5R98jSMa41qc=";
+      rev = "e7b2a4abc38f473957d2bacac57a2ce9bb06613a";
+      hash = "sha256-AAAAos2FpDpagbY8n7gaMsJWuyBHwjottOX5AHVgCmI=";
     };
+      # src = pkgs.fetchFromGitHub {
+      #   owner = "RevolutionPi";
+      #   repo = "linux";
+      #   rev = "26e35e95be0aa35823039d049034daaf3fdc4287";
+      #   hash = "sha256-K5uVos2FpDpagbY8n7gaMsJWuyBHwjottOX5AHVgCmI=";
+      #   # rev = "fe0aa6034a477f1ee3c68843beebbf31b4c0c8cb";
+      #   # hash = "sha256-K0UiPuOs7OOmzLVoNm31sMgTS9ImVhV5R98jSMa41qc=";
+      # };
   
     # This line forces Nix to see "rev" as semantically relevant
-    NIX_FORCE_KERNEL_REV = "26e35e95be0aa35823039d049034daaf3fdc4287";
+    NIX_FORCE_KERNEL_REV = "e7b2a4abc38f473957d2bacac57a2ce9bb06613a";
+    # NIX_FORCE_KERNEL_REV = "26e35e95be0aa35823039d049034daaf3fdc4287";
 
     autoModules = false;
   
